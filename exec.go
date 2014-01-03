@@ -32,7 +32,7 @@ func (g Xml) macroCmd() cmd {
 }
 
 func (g Xml) Doc() (gccxml *XmlDoc, err error) {
-	err = g.dumpCmd().run(func(r io.Reader) error {
+	err = g.dumpCmd().read(func(r io.Reader) error {
 		return xml.NewDecoder(r).Decode(&gccxml)
 	})
 	if err != nil {
@@ -44,21 +44,21 @@ func (g Xml) Doc() (gccxml *XmlDoc, err error) {
 }
 
 func (g Xml) Save(w io.Writer) error {
-	return g.dumpCmd().run(func(r io.Reader) error {
+	return g.dumpCmd().read(func(r io.Reader) error {
 		_, err := io.Copy(w, r)
 		return err
 	})
 }
 
 func (g Xml) PrintMacros() error {
-	return g.macroCmd().run(func(r io.Reader) error {
+	return g.macroCmd().read(func(r io.Reader) error {
 		_, err := io.Copy(os.Stdout, r)
 		return err
 	})
 }
 
 func (g Xml) Macros() (ms Macros, err error) {
-	err = g.macroCmd().run(func(r io.Reader) error {
+	err = g.macroCmd().read(func(r io.Reader) error {
 		ms, err = DecodeMacros(r)
 		return err
 	})
@@ -66,7 +66,7 @@ func (g Xml) Macros() (ms Macros, err error) {
 }
 
 func IncludeFiles(file string) (fs []string, err error) {
-	err = newCmd(GccCmd, "-M", "-MT", "''", file).run(func(r io.Reader) error {
+	err = newCmd(GccCmd, "-M", "-MT", "''", file).read(func(r io.Reader) error {
 		buf, err := ioutil.ReadAll(r)
 		if err != nil {
 			return err
@@ -91,7 +91,7 @@ func newCmd(name string, arg ...string) cmd {
 	return cmd{exec.Command(name, arg...)}
 }
 
-func (c cmd) run(visit func(r io.Reader) error) error {
+func (c cmd) read(visit func(r io.Reader) error) error {
 	stdout, err := c.StdoutPipe()
 	if err != nil {
 		return err
@@ -113,4 +113,27 @@ func (c cmd) run(visit func(r io.Reader) error) error {
 		return err
 	}
 	return nil
+}
+
+func (c cmd) exec() error {
+	stdout, err := c.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	defer stdout.Close()
+	stderr, err := c.StderrPipe()
+	if err != nil {
+		return err
+	}
+	defer stderr.Close()
+	if err := c.Start(); err != nil {
+		return err
+	}
+	go io.Copy(os.Stderr, stderr)
+	go io.Copy(os.Stdout, stdout)
+	if err := c.Wait(); err != nil {
+		return err
+	}
+	return nil
+
 }
