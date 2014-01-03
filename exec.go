@@ -33,12 +33,29 @@ type Xml struct {
 	IncludeDirs []string // list of include directories to pass to gccxml
 }
 
+func (g Xml) cmdArgs() []string {
+	args := []string{g.File}
+	if len(g.CFlags) > 0 {
+		args = append(args, g.CFlags...)
+	}
+	if len(g.IncludeDirs) > 0 {
+		for _, dir := range g.IncludeDirs {
+			args = append(args, "-I"+dir)
+		}
+	}
+	return args
+}
+
 func (g Xml) dumpCmd() cmd {
-	return newCmd(GccXmlCmd, "-fxml=/dev/stdout", g.File)
+	args := []string{"-fxml=/dev/stdout"}
+	args = append(args, g.cmdArgs()...)
+	return newCmd(GccXmlCmd, args...)
 }
 
 func (g Xml) macroCmd() cmd {
-	return newCmd(GccXmlCmd, "--preprocess", "-dM", g.File)
+	args := []string{"--preprocess", "-dM"}
+	args = append(args, g.cmdArgs()...)
+	return newCmd(GccXmlCmd, args...)
 }
 
 func (g Xml) Doc() (gccxml *XmlDoc, err error) {
