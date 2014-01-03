@@ -18,7 +18,7 @@ func (v *xmlDoc__) Doc() *XmlDoc {
 }
 
 func (d *XmlDoc) Print() error {
-	return Xml{d.file}.Save(os.Stdout)
+	return New(d.file).Save(os.Stdout)
 }
 
 func (d *XmlDoc) FindStruct(id string) *Struct {
