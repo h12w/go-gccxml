@@ -15,8 +15,8 @@ func TestConstants(t *testing.T) {
 	table := map[string]string{
 		"GOGCCXML_MAJOR_VERSION": "0",
 		"GOGCCXML_MINOR_VERSION": "0",
-		"GOGCCXML_PATCHLEVEL":   "1",
-		"GOGCCXML_42":  "(42)",
+		"GOGCCXML_PATCHLEVEL":    "1",
+		"GOGCCXML_42":            "(42)",
 	}
 	if len(table) != len(ms) {
 		t.Fatalf("expected [%d] items. got [%d]\n", len(table), len(ms))
@@ -31,8 +31,8 @@ func TestConstants(t *testing.T) {
 
 func TestIncludes(t *testing.T) {
 	g := Xml{
-		File: "testdata/include/test_includes.h",
-		CFlags: nil,
+		File:        "testdata/include/test_includes.h",
+		CFlags:      nil,
 		IncludeDirs: []string{"testdata"},
 	}
 	ms, _ := g.Macros()
@@ -40,8 +40,8 @@ func TestIncludes(t *testing.T) {
 	table := map[string]string{
 		"GOGCCXML_MAJOR_VERSION": "0",
 		"GOGCCXML_MINOR_VERSION": "0",
-		"GOGCCXML_PATCHLEVEL":   "1",
-		"GOGCCXML_42":  "(42)",
+		"GOGCCXML_PATCHLEVEL":    "1",
+		"GOGCCXML_42":            "(42)",
 	}
 	if len(table) != len(ms) {
 		t.Fatalf("expected [%d] items. got [%d]\n", len(table), len(ms))

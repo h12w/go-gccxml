@@ -21,15 +21,15 @@ var (
 
 func New(file string) Xml {
 	return Xml{
-		File: file,
-		CFlags: nil,
+		File:        file,
+		CFlags:      nil,
 		IncludeDirs: nil,
 	}
 }
 
 type Xml struct {
-	File string
-	CFlags []string // list of CFlags to pass to gccxml
+	File        string
+	CFlags      []string // list of CFlags to pass to gccxml
 	IncludeDirs []string // list of include directories to pass to gccxml
 }
 
