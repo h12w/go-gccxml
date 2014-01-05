@@ -30,6 +30,15 @@ func (d *XmlDoc) FindStruct(id string) *Struct {
 	return nil
 }
 
+func (d *XmlDoc) FindUnion(id string) *Union {
+	for _, v := range d.Unions {
+		if v.Id() == id {
+			return v
+		}
+	}
+	return nil
+}
+
 func (d *XmlDoc) FindField(id string) *Field {
 	for _, v := range d.Fields {
 		if v.Id() == id {
@@ -106,27 +115,15 @@ func (v *Argument) CName() string {
 }
 
 func (s *Struct) CName() string {
-	if s.aliasName != "" {
-		return s.aliasName
-	} else if s.Name_ != "" {
+	if s.Name_ != "" {
 		return s.Name_
 	}
 	return demangledName(s)
 }
 
 func (s *Union) CName() string {
-	if s.aliasName != "" {
-		return s.aliasName
-	} else if s.Name_ != "" {
+	if s.Name_ != "" {
 		return s.Name_
 	}
 	return demangledName(s)
-}
-
-type AliasName__ struct {
-	aliasName string
-}
-
-func (s AliasName__) AliasName() string {
-	return s.aliasName
 }

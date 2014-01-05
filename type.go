@@ -78,8 +78,6 @@ type Composite interface {
 	Named
 	Members() string
 	Bases() string
-	AliasName() string
-	//	IsValueType() bool
 }
 
 type Aliased interface {

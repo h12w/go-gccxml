@@ -252,9 +252,6 @@ type Struct struct {
 	Attributes__
 	Access__
 	xmlDoc__
-
-	//	IsValueType__
-	AliasName__
 }
 type Structs []*Struct
 
@@ -295,9 +292,6 @@ type Union struct {
 	Artificial__
 	Access__
 	xmlDoc__
-
-	//	IsValueType__
-	AliasName__
 }
 type Unions []*Union
 

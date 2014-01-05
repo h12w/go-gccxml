@@ -31,31 +31,7 @@ func (d *XmlDoc) prepareTypes() {
 			a.serial = i
 		}
 	}
-	d.findAlias()
 	d.sort()
-}
-
-func (d *XmlDoc) findAlias() {
-	m := NewSSet()
-	for _, td := range d.Typedefs {
-		if !m.Has(td.Id()) {
-			var t Type = td
-			for {
-				m.Add(t.Id())
-				if a, ok := t.(Aliased); ok {
-					t = a.Base()
-				} else {
-					break
-				}
-			}
-			switch s := t.(type) {
-			case *Struct:
-				s.aliasName = td.CName()
-			case *Union:
-				s.aliasName = td.CName()
-			}
-		}
-	}
 }
 
 func (d *XmlDoc) sort() {
