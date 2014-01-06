@@ -168,6 +168,16 @@ func ToFundamental(t Type) (*FundamentalType, bool) {
 	return nil, false
 }
 
+func ToEnum(t Type) (*Enumeration, bool) {
+	switch ct := t.(type) {
+	case Aliased:
+		return ToEnum(ct.Root())
+	case *Enumeration:
+		return ct, true
+	}
+	return nil, false
+}
+
 func ToComposite(t Type) (Composite, bool) {
 	switch ct := t.(type) {
 	case Aliased:
@@ -289,6 +299,12 @@ func (t *Typedef) IsFundamental() bool {
 	_, is := ToFundamental(t.Root())
 	return is
 }
+
+func (t *Typedef) IsEnum() bool {
+	_, is := ToEnum(t.Root())
+	return is
+}
+
 func (t *Typedef) IsFuncType() bool {
 	_, is := ToFuncType(t.Root())
 	return is
@@ -474,7 +490,7 @@ func decl(ty Type, v string) string {
 		}
 		return sprint(ps, "*", v)
 	case *ArrayType:
-		return sprint(decl(t.ElementType(), ""), v, "[", t.Size()/8, "]")
+		return sprint(decl(t.ElementType(), ""), v, "[", t.Size(), "]")
 	case *CvQualifiedType:
 		return decl(t.Base(), v)
 	case *ReferenceType:

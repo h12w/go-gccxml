@@ -536,8 +536,12 @@ type Size__ struct {
 	Size_ int `xml:"size,attr"`
 }
 
-func (s Size__) Size() int {
+func (s Size__) Bits() int {
 	return s.Size_
+}
+
+func (s Size__) Size() int {
+	return s.Size_/8
 }
 
 type Static__ struct {
