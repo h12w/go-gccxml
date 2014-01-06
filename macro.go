@@ -36,10 +36,6 @@ func DecodeMacros(r io.Reader) (ms Macros, err error) {
 	return
 }
 
-func (m Macro) HasPrefix(prefix string) bool {
-	return strings.HasPrefix(m.Name, prefix)
-}
-
 func (m Macro) NoArg() bool {
 	return !strings.Contains(m.Name, "(")
 }
@@ -66,9 +62,10 @@ func (m Macro) ContainsOthers(ms Macros) bool {
 	return false
 }
 
-func (ms Macros) Constants(prefix string) (fms Macros) {
+func (ms Macros) Constants(pat string) (fms Macros) {
+	re := regexp.MustCompile(pat)
 	for _, m := range ms {
-		if m.HasPrefix(prefix) &&
+		if re.MatchString(m.Name) &&
 			m.NoArg() &&
 			(m.IsString() || m.ContainsNum() || m.ContainsOthers(ms)) {
 			fms = append(fms, m)
