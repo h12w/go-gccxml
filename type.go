@@ -235,7 +235,7 @@ func ptrKind(pointedType Type) PtrKind {
 		return PtrReference
 	case *FundamentalType:
 		switch v.CName() {
-		case "void":
+		case "void", "unsigned char":
 			return PtrGeneral
 		case "char":
 			return PtrString
