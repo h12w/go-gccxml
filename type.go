@@ -6,6 +6,7 @@ package gccxml
 
 import (
 	"io"
+	"strings"
 )
 
 type PtrKind int
@@ -439,10 +440,10 @@ func (f *FunctionType) dataIndex() (int, bool) {
 func (f *FunctionType) WriteCDecl(w io.Writer, funcName string) {
 	ss := make([]string, len(f.Arguments))
 	for i, a := range f.Arguments {
-		ss[i] = decl(a.CType(), a.CName())
+		ss[i] = TypeString(a.CType(), a.CName())
 	}
-	fpn(w, decl(f.ReturnType(), funcName+"("+join(ss, ", ")+")"))
-	//	fpn(decl(f.ReturnType(), ""
+	fpn(w, TypeString(f.ReturnType(), funcName+"("+join(ss, ", ")+")"))
+	//	fpn(TypeString(f.ReturnType(), ""
 
 }
 
@@ -471,7 +472,7 @@ func (d *Unimplemented) Align() int {
 }
 
 // TODO: function type
-func decl(ty Type, v string) string {
+func TypeString(ty Type, v string) string {
 	switch t := ty.(type) {
 	case *Struct:
 		return sprint("struct ", t.Name_, " ", v)
@@ -484,17 +485,54 @@ func decl(ty Type, v string) string {
 	case *Enumeration:
 		return sprint(t.Name_, " ", v)
 	case *PointerType:
-		ps := decl(t.PointedType(), "")
+		ps := TypeString(t.PointedType(), "")
 		if contains(ps, "[") {
-			return decl(t.PointedType(), sprint("(*", v, ")"))
+			return TypeString(t.PointedType(), sprint("(*", v, ")"))
 		}
 		return sprint(ps, "*", v)
 	case *ArrayType:
-		return sprint(decl(t.ElementType(), ""), v, "[", t.Size(), "]")
+		return sprint(TypeString(t.ElementType(), ""), v, "[", t.Size(), "]")
 	case *CvQualifiedType:
-		return decl(t.Base(), v)
+		return TypeString(t.Base(), v)
 	case *ReferenceType:
-		return sprint(decl(t.Base(), "&"+v))
+		return sprint(TypeString(t.Base(), "&"+v))
+	}
+	return v
+}
+
+func QualifiedTypeString(ty Type, v string) string {
+	switch t := ty.(type) {
+	case *Struct:
+		return sprint("struct ", t.Name_, " ", v)
+	case *Union:
+		return sprint("union ", t.Name_, " ", v)
+	case *FundamentalType:
+		return sprint(t.Name_, " ", v)
+	case *Typedef:
+		return sprint(t.Name_, " ", v)
+	case *Enumeration:
+		return sprint(t.Name_, " ", v)
+	case *PointerType:
+		ps := QualifiedTypeString(t.PointedType(), "")
+		if contains(ps, "[") {
+			return QualifiedTypeString(t.PointedType(), sprint("(*", v, ")"))
+		}
+		return sprint(ps, "*", v)
+	case *ArrayType:
+		return sprint(QualifiedTypeString(t.ElementType(), ""), v, "[", t.Size(), "]")
+	case *CvQualifiedType:
+		if t.Const() == "1" {
+			baseType := QualifiedTypeString(t.Base(), v)
+			if strings.HasSuffix(baseType, "*") {
+				return sprint(baseType[:len(baseType)-1], "*const ")
+			} else {
+				return sprint("const ", baseType)
+			}
+		} else {
+			return QualifiedTypeString(t.Base(), v)
+		}
+	case *ReferenceType:
+		return sprint(QualifiedTypeString(t.Base(), "&"+v))
 	}
 	return v
 }
