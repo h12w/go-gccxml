@@ -67,6 +67,7 @@ type Type interface {
 	Id() string
 	Size() int
 	Align() int
+	CDecl(v string) string
 }
 
 type Mangled interface {
@@ -440,11 +441,9 @@ func (f *FunctionType) dataIndex() (int, bool) {
 func (f *FunctionType) WriteCDecl(w io.Writer, funcName string) {
 	ss := make([]string, len(f.Arguments))
 	for i, a := range f.Arguments {
-		ss[i] = TypeString(a.CType(), a.CName())
+		ss[i] = TypeDecl(a.CType(), a.CName())
 	}
-	fpn(w, TypeString(f.ReturnType(), funcName+"("+join(ss, ", ")+")"))
-	//	fpn(TypeString(f.ReturnType(), ""
-
+	fpn(w, TypeDecl(f.ReturnType(), funcName+"("+join(ss, ", ")+")"))
 }
 
 func (f *FunctionType) WriteCallbackStub(w io.Writer, funcName, stubName string) {
@@ -471,68 +470,81 @@ func (d *Unimplemented) Align() int {
 	return 0
 }
 
-// TODO: function type
-func TypeString(ty Type, v string) string {
-	switch t := ty.(type) {
-	case *Struct:
-		return sprint("struct ", t.Name_, " ", v)
-	case *Union:
-		return sprint("union ", t.Name_, " ", v)
-	case *FundamentalType:
-		return sprint(t.Name_, " ", v)
-	case *Typedef:
-		return sprint(t.Name_, " ", v)
-	case *Enumeration:
-		return sprint(t.Name_, " ", v)
-	case *PointerType:
-		ps := TypeString(t.PointedType(), "")
-		if contains(ps, "[") {
-			return TypeString(t.PointedType(), sprint("(*", v, ")"))
-		}
-		return sprint(ps, "*", v)
-	case *ArrayType:
-		return sprint(TypeString(t.ElementType(), ""), v, "[", t.Size(), "]")
-	case *CvQualifiedType:
-		return TypeString(t.Base(), v)
-	case *ReferenceType:
-		return sprint(TypeString(t.Base(), "&"+v))
-	}
-	return v
+func (t Name__) CDecl(v string) string {
+	return joins(t.Name_, v)
 }
 
-func QualifiedTypeString(ty Type, v string) string {
+func (t *Struct) CDecl(v string) string {
+	return joins("struct", t.Name_, v)
+}
+
+func (t *Union) CDecl(v string) string {
+	return joins("union", t.Name_, v)
+}
+
+func (t *PointerType) CDecl(v string) string {
+	ps := strings.TrimSpace(t.PointedType().CDecl(""))
+	if strings.HasSuffix(ps, "]") {
+		return t.PointedType().CDecl(concat("(*", v, ")"))
+	} else if strings.HasSuffix(ps, ")") {
+		return t.PointedType().CDecl(concat("(*", v, ") "))
+	} else if strings.HasSuffix(ps, "*") {
+		return concat(ps, "*", v)
+	}
+	return concat(ps, " *", v)
+}
+
+func (t *ArrayType) CDecl(v string) string {
+	return sprint(t.ElementType().CDecl(""), v, "[", t.Size(), "]")
+}
+
+func (t *CvQualifiedType) CDecl(v string) string {
+	if t.Const() == "1" {
+		baseType := t.Base().CDecl(v)
+		if strings.HasSuffix(baseType, "*") {
+			return sprint(baseType[:len(baseType)-1], "*const")
+		} else {
+			return sprint("const ", baseType)
+		}
+	}
+	return t.Base().CDecl(v)
+}
+
+func (t *ReferenceType) CDecl(v string) string {
+	return concat(t.Base().CDecl("&" + v))
+}
+
+func (f *FunctionType) CDecl(v string) string {
+	ss := make([]string, len(f.Arguments))
+	for i, a := range f.Arguments {
+		ss[i] = strings.TrimSpace(a.CType().CDecl(""))
+	}
+	return f.ReturnType().CDecl(v + "(" + join(ss, ", ") + ")")
+}
+
+func (t *Unimplemented) CDecl(v string) string {
+	return ""
+}
+
+// TODO: find a way to merge with CDecl, the differnces are:
+// 1. CDecl include const
+// 2. CDecl does not include parameter name of functype.
+func TypeDecl(ty Type, v string) string {
 	switch t := ty.(type) {
-	case *Struct:
-		return sprint("struct ", t.Name_, " ", v)
-	case *Union:
-		return sprint("union ", t.Name_, " ", v)
-	case *FundamentalType:
-		return sprint(t.Name_, " ", v)
-	case *Typedef:
-		return sprint(t.Name_, " ", v)
-	case *Enumeration:
-		return sprint(t.Name_, " ", v)
+	case *Struct, *Union, *FundamentalType, *Typedef, *Enumeration:
+		return ty.CDecl(v)
 	case *PointerType:
-		ps := QualifiedTypeString(t.PointedType(), "")
-		if contains(ps, "[") {
-			return QualifiedTypeString(t.PointedType(), sprint("(*", v, ")"))
+		ps := TypeDecl(t.PointedType(), "")
+		if strings.HasSuffix(ps, "]") {
+			return TypeDecl(t.PointedType(), sprint("(*", v, ")"))
 		}
 		return sprint(ps, "*", v)
 	case *ArrayType:
-		return sprint(QualifiedTypeString(t.ElementType(), ""), v, "[", t.Size(), "]")
+		return sprint(TypeDecl(t.ElementType(), ""), v, "[", t.Size(), "]")
 	case *CvQualifiedType:
-		if t.Const() == "1" {
-			baseType := QualifiedTypeString(t.Base(), v)
-			if strings.HasSuffix(baseType, "*") {
-				return sprint(baseType[:len(baseType)-1], "*const ")
-			} else {
-				return sprint("const ", baseType)
-			}
-		} else {
-			return QualifiedTypeString(t.Base(), v)
-		}
+		return TypeDecl(t.Base(), v)
 	case *ReferenceType:
-		return sprint(QualifiedTypeString(t.Base(), "&"+v))
+		return sprint(TypeDecl(t.Base(), "&"+v))
 	}
 	return v
 }

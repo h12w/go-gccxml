@@ -72,3 +72,11 @@ func fpn(w io.Writer, v ...interface{}) {
 func join(ss []string, sep string) string {
 	return strings.Join(ss, sep)
 }
+
+func joins(ss ...string) string {
+	return strings.Join(ss, " ")
+}
+
+func concat(ss ...string) string {
+	return strings.Join(ss, "")
+}

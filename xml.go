@@ -541,7 +541,7 @@ func (s Size__) Bits() int {
 }
 
 func (s Size__) Size() int {
-	return s.Size_/8
+	return s.Size_ / 8
 }
 
 type Static__ struct {
