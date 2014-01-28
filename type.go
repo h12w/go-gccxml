@@ -502,7 +502,7 @@ func (t *CvQualifiedType) CDecl(v string) string {
 	if t.Const() == "1" {
 		baseType := t.Base().CDecl(v)
 		if strings.HasSuffix(baseType, "*") {
-			return sprint(baseType[:len(baseType)-1], "*const")
+			return sprint(baseType[:len(baseType)-1], "* const")
 		} else {
 			return sprint("const ", baseType)
 		}
