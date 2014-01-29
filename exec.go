@@ -19,16 +19,45 @@ var (
 	GccCmd    = "gcc"
 )
 
+func New(file string) Xml {
+	return Xml{
+		File:        file,
+		CFlags:      nil,
+		IncludeDirs: nil,
+	}
+}
+
 type Xml struct {
-	File string
+	File        string
+	CFlags      []string // list of CFlags to pass to gccxml
+	IncludeDirs []string // list of include directories to pass to gccxml
+}
+
+func (g Xml) cmdArgs(args ...string) []string {
+	cmdargs := make([]string, 0, 1+len(args)+len(g.CFlags)+len(g.IncludeDirs))
+	if len(args) > 0 {
+		cmdargs = append(cmdargs, args...)
+	}
+	cmdargs = append(cmdargs, g.File)
+	if len(g.CFlags) > 0 {
+		cmdargs = append(cmdargs, g.CFlags...)
+	}
+	if len(g.IncludeDirs) > 0 {
+		for _, dir := range g.IncludeDirs {
+			cmdargs = append(cmdargs, "-I"+dir)
+		}
+	}
+	return cmdargs
 }
 
 func (g Xml) dumpCmd() cmd {
-	return newCmd(GccXmlCmd, "-fxml=/dev/stdout", g.File)
+	args := g.cmdArgs("-fxml=/dev/stdout")
+	return newCmd(GccXmlCmd, args...)
 }
 
 func (g Xml) macroCmd() cmd {
-	return newCmd(GccXmlCmd, "--preprocess", "-dM", g.File)
+	args := g.cmdArgs("--preprocess", "-dM")
+	return newCmd(GccXmlCmd, args...)
 }
 
 func (g Xml) Doc() (gccxml *XmlDoc, err error) {
