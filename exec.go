@@ -21,14 +21,19 @@ var (
 
 type Xml struct {
 	File string
+	Args []string
 }
 
 func (g Xml) dumpCmd() cmd {
-	return newCmd(GccXmlCmd, "-fxml=/dev/stdout", g.File)
+	return g.newCmd(GccXmlCmd, "-fxml=/dev/stdout", g.File)
 }
 
 func (g Xml) macroCmd() cmd {
-	return newCmd(GccXmlCmd, "--preprocess", "-dM", g.File)
+	return g.newCmd(GccXmlCmd, "--preprocess", "-dM", g.File)
+}
+
+func (g Xml) newCmd(name string, arg ...string) cmd {
+	return newCmd(name, append(g.Args, arg...)...)
 }
 
 func (g Xml) Doc() (gccxml *XmlDoc, err error) {
