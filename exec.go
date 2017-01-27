@@ -25,7 +25,7 @@ type Xml struct {
 }
 
 func (g Xml) dumpCmd() cmd {
-	return g.newCmd(GccXmlCmd, "-fxml=/dev/stdout", g.File)
+	return g.newCmd(GccXmlCmd, "-std=c89", "-fxml=/dev/stdout", g.File)
 }
 
 func (g Xml) macroCmd() cmd {
