@@ -15,20 +15,28 @@ import (
 
 var (
 	// Modify this variable if gccxml is in another path.
-	GccXmlCmd = "gccxml"
-	GccCmd    = "gcc"
+	GccXmlCmd  = "gccxml"
+	GccCmd     = "gcc"
+	CastXmlCmd = "castxml"
 )
 
 type Xml struct {
-	File string
-	Args []string
+	File    string
+	Args    []string
+	CastXml bool
 }
 
 func (g Xml) dumpCmd() cmd {
+	if g.CastXml {
+		return g.newCmd(CastXmlCmd, "--castxml-gccxml", "-std=c89", "-o", "/dev/stdout", g.File)
+	}
 	return g.newCmd(GccXmlCmd, "-std=c89", "-fxml=/dev/stdout", g.File)
 }
 
 func (g Xml) macroCmd() cmd {
+	if g.CastXml {
+		return g.newCmd(CastXmlCmd, "--preprocess", "-dM", g.File)
+	}
 	return g.newCmd(GccXmlCmd, "--preprocess", "-dM", g.File)
 }
 
