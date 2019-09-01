@@ -28,7 +28,11 @@ type Xml struct {
 
 func (g Xml) dumpCmd() cmd {
 	if g.CastXml {
-		return g.newCmd(CastXmlCmd, "--castxml-gccxml", "-std=c89", "-o", "/dev/stdout", g.File)
+		return g.newCmd(CastXmlCmd,
+			"--castxml-gccxml",
+			"--castxml-cc-gnu-c", "gcc",
+			// "-std=c89",
+			"-o", "/dev/stdout", g.File)
 	}
 	return g.newCmd(GccXmlCmd, "-std=c89", "-fxml=/dev/stdout", g.File)
 }
@@ -46,7 +50,7 @@ func (g Xml) newCmd(name string, arg ...string) cmd {
 
 func (g Xml) Doc() (gccxml *XmlDoc, err error) {
 	err = g.dumpCmd().read(func(r io.Reader) error {
-		return xml.NewDecoder(r).Decode(&gccxml)
+		return Wrap(xml.NewDecoder(r).Decode(&gccxml))
 	})
 	if err != nil {
 		return nil, err
@@ -115,6 +119,7 @@ func (c cmd) read(visit func(r io.Reader) error) error {
 		return err
 	}
 	defer stderr.Close()
+	// log.Printf("starting command %v", *c.Cmd)
 	if err := c.Start(); err != nil {
 		return err
 	}
