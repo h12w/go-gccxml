@@ -1,5 +1,5 @@
-module github.com/h12w/go-gccxml
+module h12.io/go-gccxml
 
-go 1.12
+go 1.15
 
-require golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+require golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1

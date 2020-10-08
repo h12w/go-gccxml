@@ -9,7 +9,7 @@ import (
 )
 
 func TestIt(t *testing.T) {
-	g := Xml{"/usr/local/include/SDL2/SDL.h"}
+	g := Xml{File: "/usr/local/include/SDL2/SDL.h", CastXml: true}
 	ms, _ := g.Macros()
 	ms = ms.Constants("SDL_")
 	for _, m := range ms {
