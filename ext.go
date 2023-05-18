@@ -84,6 +84,9 @@ func demangledName(t Mangled) string {
 }
 
 func (a *ArrayType) Len() int {
+	if a.Size() == 0 {
+		return 0
+	}
 	return a.Size() / a.ElementType().Size()
 }
 
